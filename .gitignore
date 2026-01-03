@@ -1,0 +1,9 @@
+node_modules/
+pastes.db
+pastes.db-journal
+.env
+*.log
+.DS_Store
+.vercel
+
+.env.example
