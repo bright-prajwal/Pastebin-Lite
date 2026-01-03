@@ -1,27 +1,9 @@
-/**
- * Database layer for paste persistence
- * Uses MySQL for persistence
- * 
- * Environment variables:
- * - DB_TYPE: 'mysql' (default: 'mysql')
- * - DATABASE_URL: MySQL connection URL
- *   Format: mysql://user:password@host:port/database
- *   Or use individual variables:
- * - DB_HOST: MySQL host (default: 'localhost')
- * - DB_PORT: MySQL port (default: 3306)
- * - DB_USER: MySQL user
- * - DB_PASSWORD: MySQL password
- * - DB_NAME: MySQL database name
- */
 
 const { v4: uuidv4 } = require('uuid');
 
 let dbClient = null;
 let dbType = process.env.DB_TYPE || 'mysql';
 
-/**
- * Initialize database connection
- */
 async function initDatabase() {
   try {
     if (dbType === 'mysql') {
@@ -29,16 +11,14 @@ async function initDatabase() {
       
       let connectionConfig;
       
-      // Use DATABASE_URL if provided, otherwise use individual variables
       if (process.env.DATABASE_URL) {
-        // Parse DATABASE_URL
         const url = new URL(process.env.DATABASE_URL);
         connectionConfig = {
           host: url.hostname,
           port: parseInt(url.port) || 3306,
           user: url.username,
           password: url.password,
-          database: url.pathname.slice(1), // Remove leading '/'
+          database: url.pathname.slice(1), 
           waitForConnections: true,
           connectionLimit: 10,
           queueLimit: 0
@@ -58,10 +38,8 @@ async function initDatabase() {
       
       dbClient = mysql.createPool(connectionConfig);
       
-      // Test connection
       await dbClient.query('SELECT 1');
       
-      // Create table if it doesn't exist
       await dbClient.query(`
         CREATE TABLE IF NOT EXISTS pastes (
           id VARCHAR(36) PRIMARY KEY,
@@ -138,10 +116,8 @@ async function getPasteById(id) {
  * @returns {Promise<number>} New view count
  */
 async function incrementViews(id) {
-  // Use atomic UPDATE with RETURNING equivalent (MySQL 8.0.19+)
-  // For older MySQL versions, we'll do UPDATE then SELECT
+
   try {
-    // Try MySQL 8.0.19+ syntax first (if supported)
     const [result] = await dbClient.query(
       'UPDATE pastes SET view_count = view_count + 1 WHERE id = ?',
       [id]
@@ -150,9 +126,7 @@ async function incrementViews(id) {
     if (result.affectedRows === 0) {
       throw new Error('Paste not found');
     }
-    
-    // Get the updated view count
-    const [rows] = await dbClient.query('SELECT view_count FROM pastes WHERE id = ?', [id]);
+        const [rows] = await dbClient.query('SELECT view_count FROM pastes WHERE id = ?', [id]);
     
     if (rows.length === 0) {
       throw new Error('Paste not found');
@@ -163,7 +137,6 @@ async function incrementViews(id) {
     if (error.message === 'Paste not found') {
       throw error;
     }
-    // Fallback: get, increment, update (with transaction for safety)
     const connection = await dbClient.getConnection();
     try {
       await connection.beginTransaction();

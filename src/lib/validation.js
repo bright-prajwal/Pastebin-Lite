@@ -1,11 +1,10 @@
-/**
- * Validation rules using express-validator
- */
+//  Validation rules using express-validator
+ 
 const { body } = require('express-validator');
 
-/**
- * Validation rules for creating a paste
- */
+
+//  * Validation rules for creating a paste
+
 const createPasteValidation = [
   body('content')
     .notEmpty()

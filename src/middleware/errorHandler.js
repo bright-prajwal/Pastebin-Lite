@@ -1,44 +1,30 @@
-/**
- * Centralized error handling middleware
- */
 
-/**
- * Error handler middleware
- * Handles all errors and returns appropriate JSON responses for API routes
- */
 function errorHandler(err, req, res, next) {
-  // Log error (but don't expose stack trace in production)
-  if (process.env.NODE_ENV !== 'production') {
-    console.error('Error:', err);
+  if (process.env.NODE_ENV !== "production") {
+    console.error("Error:", err);
   } else {
-    console.error('Error:', err.message);
+    console.error("Error:", err.message);
   }
-  
-  // Check if response was already sent
+
   if (res.headersSent) {
     return next(err);
   }
-  
-  // Determine status code
+
   let statusCode = err.statusCode || err.status || 500;
-  
-  // Determine error message
-  let message = err.message || 'Internal server error';
-  
-  // For validation errors from express-validator
-  if (err.type === 'validation') {
+
+  let message = err.message || "Internal server error";
+
+  if (err.type === "validation") {
     statusCode = 400;
-    message = err.message || 'Validation error';
+    message = err.message || "Validation error";
   }
-  
-  // For API routes, always return JSON
-  if (req.path && req.path.startsWith('/api/')) {
+
+  if (req.path && req.path.startsWith("/api/")) {
     return res.status(statusCode).json({
-      error: message
+      error: message,
     });
   }
-  
-  // For non-API routes, return HTML error page
+
   res.status(statusCode).send(`
     <!DOCTYPE html>
     <html>
@@ -54,33 +40,28 @@ function errorHandler(err, req, res, next) {
   `);
 }
 
-/**
- * Helper to escape HTML
- */
 function escapeHtml(text) {
   const map = {
-    '&': '&amp;',
-    '<': '&lt;',
-    '>': '&gt;',
-    '"': '&quot;',
-    "'": '&#039;'
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#039;",
   };
-  return String(text).replace(/[&<>"']/g, m => map[m]);
+  return String(text).replace(/[&<>"']/g, (m) => map[m]);
 }
 
-/**
- * 404 Not Found handler
- */
+
 function notFoundHandler(req, res, next) {
   const statusCode = 404;
-  const message = 'Not found';
-  
-  if (req.path && req.path.startsWith('/api/')) {
+  const message = "Not found";
+
+  if (req.path && req.path.startsWith("/api/")) {
     return res.status(statusCode).json({
-      error: message
+      error: message,
     });
   }
-  
+
   res.status(statusCode).send(`
     <!DOCTYPE html>
     <html>
@@ -97,6 +78,5 @@ function notFoundHandler(req, res, next) {
 
 module.exports = {
   errorHandler,
-  notFoundHandler
+  notFoundHandler,
 };
-
